@@ -1,49 +1,146 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-    <title>Transactions</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeForge - Transaction History</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<nav>
-    <h2>TRADEFORGE</h2>
+<!-- Live Stock Ticker -->
+<div class="ticker-wrap">
+    <div class="ticker" id="tickerContent"></div>
+</div>
 
-    <a href="dashboard.html">Dashboard</a>
-    <a href="stocks.html">Stocks</a>
-    <a href="portfolio.html">Portfolio</a>
-    <a href="transactions.html">Transactions</a>
+<!-- Navigation Bar -->
+<nav>
+    <a href="dashboard.html" class="nav-brand">
+        <div class="brand-icon">TF</div>
+        <span class="brand-title">TRADEFORGE</span>
+    </a>
+
+    <div class="nav-links">
+        <a href="dashboard.html" class="nav-link"><span>📊</span> Dashboard</a>
+        <a href="stocks.html" class="nav-link"><span>📈</span> Stocks</a>
+        <a href="portfolio.html" class="nav-link"><span>💼</span> Portfolio</a>
+        <a href="transactions.html" class="nav-link active"><span>📜</span> Transactions</a>
+    </div>
+
+    <div class="nav-user">
+        <div class="user-badge">
+            <span class="status-dot"></span>
+            <div class="user-avatar">T</div>
+            <span class="user-name" id="navUsername">Trader</span>
+        </div>
+    </div>
 </nav>
 
+<!-- Container -->
 <div class="container">
 
-    <h1>Transaction History</h1>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Transaction History Audit Log</h1>
+            <p class="page-subtitle">Chronological record of trades processed by Chain of Responsibility agents</p>
+        </div>
+        <button class="btn btn-primary" data-trade-stock="1" data-trade-type="BUY">
+            <span>⚡</span> Execute New Trade
+        </button>
+    </div>
 
-    <table>
+    <!-- Search & Filter Bar -->
+    <div class="search-filter-bar">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="stockSearchInput" placeholder="Filter by type, symbol, or agent...">
+        </div>
+    </div>
 
-        <tr>
-            <th>Type</th>
-            <th>Stock</th>
-            <th>Quantity</th>
-            <th>Agent</th>
-            <th>Amount</th>
-        </tr>
-
-        <tr>
-            <td>BUY</td>
-            <td>TCS</td>
-            <td>300</td>
-            <td>Agent 1</td>
-            <td>₹10,50,000</td>
-        </tr>
-
-    </table>
+    <!-- Transaction Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Stock Symbol</th>
+                        <th>Order Quantity</th>
+                        <th>Chain Handler</th>
+                        <th>Order Amount</th>
+                        <th>Execution Pattern Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="txTableBody">
+                    <tr>
+                        <td><span class="btn-buy">BUY</span></td>
+                        <td><strong>TCS</strong></td>
+                        <td style="font-family: var(--font-mono);">300</td>
+                        <td><span class="agent-tag agent-1">Agent 1</span></td>
+                        <td style="font-family: var(--font-mono);">₹10,50,000.00</td>
+                        <td><span style="font-size: 0.8rem; color: var(--text-muted);">&le; 500 Qty handled by Agent 1</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="btn-buy">BUY</span></td>
+                        <td><strong>INFY</strong></td>
+                        <td style="font-family: var(--font-mono);">600</td>
+                        <td><span class="agent-tag agent-2">Agent 2</span></td>
+                        <td style="font-family: var(--font-mono);">₹9,72,000.00</td>
+                        <td><span style="font-size: 0.8rem; color: var(--text-muted);">501-700 Qty passed to Agent 2</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="btn-sell">SELL</span></td>
+                        <td><strong>RELIANCE</strong></td>
+                        <td style="font-family: var(--font-mono);">850</td>
+                        <td><span class="agent-tag agent-3">Agent 3</span></td>
+                        <td style="font-family: var(--font-mono);">₹24,22,925.00</td>
+                        <td><span style="font-size: 0.8rem; color: var(--text-muted);">&gt; 700 Qty escalated to Agent 3</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
 
-</body>
+<!-- Quick Trade Modal -->
+<div class="modal-overlay" id="tradeModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <span id="modalTypeBadge" class="btn-buy">BUY</span>
+                <h3 class="modal-title" id="modalStockName">TCS</h3>
+            </div>
+            <button class="btn-close" id="closeModal">&times;</button>
+        </div>
 
+        <form id="tradeForm">
+            <input type="hidden" id="modalUserId" name="userId" value="1">
+            <input type="hidden" id="modalStockId" name="stockId" value="1">
+            <input type="hidden" id="modalType" name="type" value="BUY">
+
+            <div class="form-group">
+                <label class="form-label">Current Price</label>
+                <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-cyan);" id="modalStockPrice">₹3,500.00</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalQuantity">Quantity</label>
+                <input type="number" id="modalQuantity" name="quantity" class="form-input" value="100" min="1" required>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <span style="font-size: 0.88rem; color: var(--text-muted);">Estimated Total:</span>
+                <span style="font-size: 1.3rem; font-weight: 800; font-family: var(--font-mono);" id="modalTotalEst">₹3,50,000.00</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">
+                CONFIRM TRANSACTION
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
 </html>

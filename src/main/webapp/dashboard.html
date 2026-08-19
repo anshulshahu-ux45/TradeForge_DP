@@ -1,48 +1,283 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-    <title>TradeForge Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeForge - Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<nav>
-    <h2>TRADEFORGE</h2>
+<!-- Live Stock Ticker -->
+<div class="ticker-wrap">
+    <div class="ticker" id="tickerContent">
+        <div class="ticker-item"><span class="ticker-symbol">TCS</span> <span class="ticker-price">₹3,500.00</span> <span class="ticker-up">▲ 1.25%</span></div>
+        <div class="ticker-item"><span class="ticker-symbol">RELIANCE</span> <span class="ticker-price">₹2,850.50</span> <span class="ticker-down">▼ 0.45%</span></div>
+        <div class="ticker-item"><span class="ticker-symbol">INFY</span> <span class="ticker-price">₹1,620.00</span> <span class="ticker-up">▲ 2.10%</span></div>
+        <div class="ticker-item"><span class="ticker-symbol">HDFCBANK</span> <span class="ticker-price">₹1,540.75</span> <span class="ticker-up">▲ 0.80%</span></div>
+        <div class="ticker-item"><span class="ticker-symbol">ICICIBANK</span> <span class="ticker-price">₹1,120.30</span> <span class="ticker-down">▼ 1.15%</span></div>
+        <div class="ticker-item"><span class="ticker-symbol">TATAMOTORS</span> <span class="ticker-price">₹980.60</span> <span class="ticker-up">▲ 3.40%</span></div>
+    </div>
+</div>
 
-    <a href="dashboard.html">Dashboard</a>
-    <a href="stocks.html">Stocks</a>
-    <a href="portfolio.html">Portfolio</a>
-    <a href="transactions.html">Transactions</a>
+<!-- Navigation Bar -->
+<nav>
+    <a href="dashboard.html" class="nav-brand">
+        <div class="brand-icon">TF</div>
+        <span class="brand-title">TRADEFORGE</span>
+    </a>
+
+    <div class="nav-links">
+        <a href="dashboard.html" class="nav-link active"><span>📊</span> Dashboard</a>
+        <a href="stocks.html" class="nav-link"><span>📈</span> Stocks</a>
+        <a href="portfolio.html" class="nav-link"><span>💼</span> Portfolio</a>
+        <a href="transactions.html" class="nav-link"><span>📜</span> Transactions</a>
+    </div>
+
+    <div class="nav-user">
+        <div class="user-badge">
+            <span class="status-dot"></span>
+            <div class="user-avatar">T</div>
+            <span class="user-name" id="navUsername">Trader</span>
+        </div>
+    </div>
 </nav>
 
+<!-- Main Dashboard Body -->
 <div class="container">
 
-    <h1>Dashboard</h1>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Trading Dashboard</h1>
+            <p class="page-subtitle">Real-time market analytics and Java Design Pattern monitor</p>
+        </div>
+        <button class="btn btn-primary" data-trade-stock="1" data-trade-type="BUY">
+            <span>⚡</span> Quick Trade
+        </button>
+    </div>
 
-    <div class="cards">
-
-        <div class="card">
-            <h3>Balance</h3>
-            <p>₹50,000</p>
+    <!-- Animated KPI Stats Grid -->
+    <div class="kpi-grid">
+        <div class="card kpi-card" style="--card-accent: var(--accent-cyan);">
+            <div class="kpi-header">
+                <span class="kpi-title">Available Balance</span>
+                <div class="kpi-icon">💰</div>
+            </div>
+            <div class="kpi-value animate-counter" id="userBalance" data-target="50000" data-prefix="₹">₹50,000</div>
+            <div>
+                <span class="kpi-change positive">▲ +2.4% today</span>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Stocks</h3>
-            <p>3</p>
+        <div class="card kpi-card" style="--card-accent: var(--accent-green);">
+            <div class="kpi-header">
+                <span class="kpi-title">Active Holdings</span>
+                <div class="kpi-icon">📦</div>
+            </div>
+            <div class="kpi-value animate-counter" data-target="3" data-suffix=" Stocks">3</div>
+            <div>
+                <span class="kpi-change positive">▲ TCS, INFY, HDFCBANK</span>
+            </div>
         </div>
 
+        <div class="card kpi-card" style="--card-accent: var(--accent-purple);">
+            <div class="kpi-header">
+                <span class="kpi-title">Total Transactions</span>
+                <div class="kpi-icon">🔄</div>
+            </div>
+            <div class="kpi-value animate-counter" data-target="5" data-suffix=" Orders">5</div>
+            <div>
+                <span class="kpi-change positive">✓ Processed by Agents</span>
+            </div>
+        </div>
+
+        <div class="card kpi-card" style="--card-accent: var(--accent-amber);">
+            <div class="kpi-header">
+                <span class="kpi-title">Design Patterns</span>
+                <div class="kpi-icon">⚙️</div>
+            </div>
+            <div class="kpi-value animate-counter" data-target="5" data-suffix=" Active">5</div>
+            <div>
+                <span class="kpi-change positive">✓ Singleton, Factory, Chain, Proxy, Observer</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Chart & Pattern Monitor -->
+    <div class="dashboard-grid">
+
+        <!-- Stock Price Movement Chart -->
+        <div class="card chart-card">
+            <div class="chart-header">
+                <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 700;">TCS Market Trend</h3>
+                    <span style="font-size: 0.82rem; color: var(--text-muted);">Real-time price movement & technical resistance</span>
+                </div>
+                <div class="chart-controls">
+                    <button class="btn-time active">1D</button>
+                    <button class="btn-time">1W</button>
+                    <button class="btn-time">1M</button>
+                    <button class="btn-time">1Y</button>
+                </div>
+            </div>
+            <div class="chart-canvas-wrap">
+                <canvas id="stockChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Design Pattern Visualizer Card -->
         <div class="card">
-            <h3>Transactions</h3>
-            <p>5</p>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Java Design Pattern Monitor</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px;">Live architectural execution stack</p>
+
+            <div class="pattern-monitor">
+                <div class="pattern-item">
+                    <span class="pattern-badge badge-singleton">Singleton</span>
+                    <div class="pattern-content">
+                        <div class="pattern-title">
+                            <span>DatabaseConnection</span>
+                            <span class="pattern-component">SINGLETON</span>
+                        </div>
+                        <div class="pattern-desc">Guarantees a single MySQL Connection instance across the app.</div>
+                    </div>
+                </div>
+
+                <div class="pattern-item">
+                    <span class="pattern-badge badge-factory">Factory</span>
+                    <div class="pattern-content">
+                        <div class="pattern-title">
+                            <span>TransactionFactory</span>
+                            <span class="pattern-component">FACTORY</span>
+                        </div>
+                        <div class="pattern-desc">Instantiates BuyTransaction or SellTransaction based on trade type.</div>
+                    </div>
+                </div>
+
+                <div class="pattern-item">
+                    <span class="pattern-badge badge-chain">Chain</span>
+                    <div class="pattern-content">
+                        <div class="pattern-title">
+                            <span>Agent1 &rarr; Agent2 &rarr; Agent3</span>
+                            <span class="pattern-component">CHAIN OF RESP</span>
+                        </div>
+                        <div class="pattern-desc">Routes order quantity: Agent 1 (&le;500), Agent 2 (&le;700), Agent 3 (&gt;700).</div>
+                    </div>
+                </div>
+
+                <div class="pattern-item">
+                    <span class="pattern-badge badge-proxy">Proxy</span>
+                    <div class="pattern-content">
+                        <div class="pattern-title">
+                            <span>TradingProxy</span>
+                            <span class="pattern-component">PROXY</span>
+                        </div>
+                        <div class="pattern-desc">Controls access and enforces session login checks before execution.</div>
+                    </div>
+                </div>
+
+                <div class="pattern-item">
+                    <span class="pattern-badge badge-observer">Observer</span>
+                    <div class="pattern-content">
+                        <div class="pattern-title">
+                            <span>TradeSubject &amp; UserObserver</span>
+                            <span class="pattern-component">OBSERVER</span>
+                        </div>
+                        <div class="pattern-desc">Notifies observers and logs execution feedback when trades complete.</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
 
+    <!-- Recent Transactions Table Card -->
+    <div class="card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700;">Recent Transactions</h3>
+            <a href="transactions.html" style="color: var(--accent-cyan); text-decoration: none; font-size: 0.88rem; font-weight: 600;">View All &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Stock</th>
+                        <th>Quantity</th>
+                        <th>Agent Handler</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="txTableBody">
+                    <tr>
+                        <td><span class="btn-buy">BUY</span></td>
+                        <td><strong>TCS</strong></td>
+                        <td style="font-family: var(--font-mono);">300</td>
+                        <td><span class="agent-tag agent-1">Agent 1</span></td>
+                        <td style="font-family: var(--font-mono);">₹10,50,000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="btn-buy">BUY</span></td>
+                        <td><strong>INFY</strong></td>
+                        <td style="font-family: var(--font-mono);">600</td>
+                        <td><span class="agent-tag agent-2">Agent 2</span></td>
+                        <td style="font-family: var(--font-mono);">₹9,72,000</td>
+                    </tr>
+                    <tr>
+                        <td><span class="btn-sell">SELL</span></td>
+                        <td><strong>RELIANCE</strong></td>
+                        <td style="font-family: var(--font-mono);">850</td>
+                        <td><span class="agent-tag agent-3">Agent 3</span></td>
+                        <td style="font-family: var(--font-mono);">₹24,22,925</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
-</body>
+<!-- Quick Trade Modal -->
+<div class="modal-overlay" id="tradeModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <span id="modalTypeBadge" class="btn-buy">BUY</span>
+                <h3 class="modal-title" id="modalStockName">TCS (Tata Consultancy)</h3>
+            </div>
+            <button class="btn-close" id="closeModal">&times;</button>
+        </div>
 
+        <form id="tradeForm">
+            <input type="hidden" id="modalUserId" name="userId" value="1">
+            <input type="hidden" id="modalStockId" name="stockId" value="1">
+            <input type="hidden" id="modalType" name="type" value="BUY">
+
+            <div class="form-group">
+                <label class="form-label">Current Market Price</label>
+                <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-cyan);" id="modalStockPrice">₹3,500.00</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalQuantity">Quantity (Triggers Agent Routing in Chain of Resp.)</label>
+                <input type="number" id="modalQuantity" name="quantity" class="form-input" value="100" min="1" required>
+                <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 4px;">
+                    &le; 500 &rarr; <strong>Agent 1</strong> | 501-700 &rarr; <strong>Agent 2</strong> | &gt; 700 &rarr; <strong>Agent 3</strong>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <span style="font-size: 0.88rem; color: var(--text-muted);">Estimated Total:</span>
+                <span style="font-size: 1.3rem; font-weight: 800; font-family: var(--font-mono);" id="modalTotalEst">₹3,50,000.00</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">
+                CONFIRM TRANSACTION
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
 </html>

@@ -1,85 +1,204 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-    <title>Stocks</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeForge - Stocks Market</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<nav>
-    <h2>TRADEFORGE</h2>
+<!-- Live Stock Ticker -->
+<div class="ticker-wrap">
+    <div class="ticker" id="tickerContent"></div>
+</div>
 
-    <a href="dashboard.html">Dashboard</a>
-    <a href="stocks.html">Stocks</a>
-    <a href="portfolio.html">Portfolio</a>
-    <a href="transactions.html">Transactions</a>
+<!-- Navigation Bar -->
+<nav>
+    <a href="dashboard.html" class="nav-brand">
+        <div class="brand-icon">TF</div>
+        <span class="brand-title">TRADEFORGE</span>
+    </a>
+
+    <div class="nav-links">
+        <a href="dashboard.html" class="nav-link"><span>📊</span> Dashboard</a>
+        <a href="stocks.html" class="nav-link active"><span>📈</span> Stocks</a>
+        <a href="portfolio.html" class="nav-link"><span>💼</span> Portfolio</a>
+        <a href="transactions.html" class="nav-link"><span>📜</span> Transactions</a>
+    </div>
+
+    <div class="nav-user">
+        <div class="user-badge">
+            <span class="status-dot"></span>
+            <div class="user-avatar">T</div>
+            <span class="user-name" id="navUsername">Trader</span>
+        </div>
+    </div>
 </nav>
 
+<!-- Container -->
 <div class="container">
 
-    <h1>Available Stocks</h1>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Available Stocks Market</h1>
+            <p class="page-subtitle">Select equities to execute instant Buy or Sell transactions</p>
+        </div>
+    </div>
 
-    <table>
+    <!-- Search & Filter Bar -->
+    <div class="search-filter-bar">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="stockSearchInput" placeholder="Search by stock symbol or company name (e.g. TCS, Reliance)...">
+        </div>
+    </div>
 
-        <tr>
-            <th>Symbol</th>
-            <th>Company</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Action</th>
-        </tr>
-
-        <tr>
-            <td>TCS</td>
-            <td>Tata Consultancy Services</td>
-            <td>₹3500</td>
-            <td>5000</td>
-
-            <td>
-
-                <form action="trade" method="post">
-
-                    <input
-                        type="hidden"
-                        name="userId"
-                        value="1"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="stockId"
-                        value="1"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="type"
-                        value="BUY"
-                    >
-
-                    <input
-                        type="number"
-                        name="quantity"
-                        placeholder="Qty"
-                        required
-                    >
-
-                    <button>
-                        BUY
-                    </button>
-
-                </form>
-
-            </td>
-        </tr>
-
-    </table>
+    <!-- Stocks Catalog Table -->
+    <div class="card">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Company Name</th>
+                        <th>Category</th>
+                        <th>Current Price</th>
+                        <th>24h Change</th>
+                        <th>Market Depth</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stocksTableBody">
+                    <tr>
+                        <td><strong>TCS</strong></td>
+                        <td>Tata Consultancy Services</td>
+                        <td><span class="pattern-badge badge-singleton">Tech</span></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">₹3,500.00</td>
+                        <td><span class="kpi-change positive">▲ +1.25%</span></td>
+                        <td style="font-family: var(--font-mono);">5,000</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-buy" data-trade-stock="1" data-trade-type="BUY">BUY</button>
+                                <button class="btn btn-sell" data-trade-stock="1" data-trade-type="SELL">SELL</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>RELIANCE</strong></td>
+                        <td>Reliance Industries Ltd.</td>
+                        <td><span class="pattern-badge badge-factory">Energy</span></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">₹2,850.50</td>
+                        <td><span class="kpi-change negative">▼ -0.45%</span></td>
+                        <td style="font-family: var(--font-mono);">4,200</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-buy" data-trade-stock="2" data-trade-type="BUY">BUY</button>
+                                <button class="btn btn-sell" data-trade-stock="2" data-trade-type="SELL">SELL</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>INFY</strong></td>
+                        <td>Infosys Limited</td>
+                        <td><span class="pattern-badge badge-singleton">Tech</span></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">₹1,620.00</td>
+                        <td><span class="kpi-change positive">▲ +2.10%</span></td>
+                        <td style="font-family: var(--font-mono);">6,100</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-buy" data-trade-stock="3" data-trade-type="BUY">BUY</button>
+                                <button class="btn btn-sell" data-trade-stock="3" data-trade-type="SELL">SELL</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>HDFCBANK</strong></td>
+                        <td>HDFC Bank Ltd.</td>
+                        <td><span class="pattern-badge badge-proxy">Banking</span></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">₹1,540.75</td>
+                        <td><span class="kpi-change positive">▲ +0.80%</span></td>
+                        <td style="font-family: var(--font-mono);">8,000</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-buy" data-trade-stock="4" data-trade-type="BUY">BUY</button>
+                                <button class="btn btn-sell" data-trade-stock="4" data-trade-type="SELL">SELL</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>ICICIBANK</strong></td>
+                        <td>ICICI Bank Ltd.</td>
+                        <td><span class="pattern-badge badge-proxy">Banking</span></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">₹1,120.30</td>
+                        <td><span class="kpi-change negative">▼ -1.15%</span></td>
+                        <td style="font-family: var(--font-mono);">3,500</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-buy" data-trade-stock="5" data-trade-type="BUY">BUY</button>
+                                <button class="btn btn-sell" data-trade-stock="5" data-trade-type="SELL">SELL</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>TATAMOTORS</strong></td>
+                        <td>Tata Motors Ltd.</td>
+                        <td><span class="pattern-badge badge-chain">Auto</span></td>
+                        <td style="font-family: var(--font-mono); font-weight: 700;">₹980.60</td>
+                        <td><span class="kpi-change positive">▲ +3.40%</span></td>
+                        <td style="font-family: var(--font-mono);">9,500</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-buy" data-trade-stock="6" data-trade-type="BUY">BUY</button>
+                                <button class="btn btn-sell" data-trade-stock="6" data-trade-type="SELL">SELL</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
 
-</body>
+<!-- Quick Trade Modal -->
+<div class="modal-overlay" id="tradeModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <span id="modalTypeBadge" class="btn-buy">BUY</span>
+                <h3 class="modal-title" id="modalStockName">TCS</h3>
+            </div>
+            <button class="btn-close" id="closeModal">&times;</button>
+        </div>
 
+        <form id="tradeForm">
+            <input type="hidden" id="modalUserId" name="userId" value="1">
+            <input type="hidden" id="modalStockId" name="stockId" value="1">
+            <input type="hidden" id="modalType" name="type" value="BUY">
+
+            <div class="form-group">
+                <label class="form-label">Current Price</label>
+                <div style="font-size: 1.4rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-cyan);" id="modalStockPrice">₹3,500.00</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modalQuantity">Quantity</label>
+                <input type="number" id="modalQuantity" name="quantity" class="form-input" value="100" min="1" required>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <span style="font-size: 0.88rem; color: var(--text-muted);">Estimated Total:</span>
+                <span style="font-size: 1.3rem; font-weight: 800; font-family: var(--font-mono);" id="modalTotalEst">₹3,50,000.00</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">
+                CONFIRM TRANSACTION
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
 </html>

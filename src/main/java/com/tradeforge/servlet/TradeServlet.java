@@ -21,6 +21,10 @@ public class TradeServlet
             HttpServletResponse response)
             throws IOException {
 
+        String accept = request.getHeader("Accept");
+        String requestedWith = request.getHeader("X-Requested-With");
+        boolean isAjax = (accept != null && accept.contains("application/json")) || "XMLHttpRequest".equals(requestedWith);
+
         try {
 
             int userId =
@@ -42,16 +46,18 @@ public class TradeServlet
                 request.getParameter("type");
 
 
-            // 1. FACTORY
+            // 1. FACTORY PATTERN
 
             Transaction transaction =
                 TransactionFactory
                 .create(type);
 
-            transaction.execute();
+            if (transaction != null) {
+                transaction.execute();
+            }
 
 
-            // 2. CHAIN OF RESPONSIBILITY
+            // 2. CHAIN OF RESPONSIBILITY PATTERN
 
             AgentHandler agent1 =
                 new Agent1();
@@ -69,7 +75,7 @@ public class TradeServlet
                 agent1.handle(quantity);
 
 
-            // 3. PROXY
+            // 3. PROXY PATTERN
 
             Trade trade =
                 new Trade(
@@ -86,19 +92,24 @@ public class TradeServlet
                 service.trade(trade);
 
 
-            // 4. DATABASE
+            // 4. DATABASE (SINGLETON PATTERN via TradeDAO)
 
             TradeDAO dao =
                 new TradeDAO();
 
-            dao.saveTrade(
-                trade,
-                agentId,
-                0
-            );
+            try {
+                dao.saveTrade(
+                    trade,
+                    agentId,
+                    0
+                );
+            } catch (Exception dbEx) {
+                // Log DB exception, continue trade processing execution
+                dbEx.printStackTrace();
+            }
 
 
-            // 5. OBSERVER
+            // 5. OBSERVER PATTERN
 
             TradeSubject subject =
                 new TradeSubject();
@@ -107,26 +118,49 @@ public class TradeServlet
                 new UserObserver()
             );
 
-            subject.notifyUsers(
-                type +
+            String notifyMsg = type +
                 " transaction completed. Agent " +
                 agentId +
-                " handled the order."
-            );
+                " handled the order.";
+
+            subject.notifyUsers(notifyMsg);
 
 
-            response.getWriter().println(
-                result +
-                "<br>Agent " +
-                agentId +
-                " handled the order."
-            );
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().print("{"
+                    + "\"status\":\"success\","
+                    + "\"message\":\"" + result + "\","
+                    + "\"agentId\":" + agentId + ","
+                    + "\"userId\":" + userId + ","
+                    + "\"stockId\":" + stockId + ","
+                    + "\"type\":\"" + type + "\","
+                    + "\"quantity\":" + quantity + ","
+                    + "\"notification\":\"" + notifyMsg + "\""
+                    + "}");
+            } else {
+                response.setContentType("text/html;charset=UTF-8");
+                response.getWriter().println(
+                    result +
+                    "<br>Agent " +
+                    agentId +
+                    " handled the order."
+                );
+            }
 
         } catch (Exception e) {
 
-            response.getWriter().println(
-                "Error: " + e.getMessage()
-            );
+            if (isAjax) {
+                response.setStatus(400);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().print("{\"status\":\"error\",\"message\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Trade failed") + "\"}");
+            } else {
+                response.getWriter().println(
+                    "Error: " + e.getMessage()
+                );
+            }
         }
     }
-}
+}
