@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav>
+    <h2>TRADEFORGE</h2>
+
+    <a href="dashboard.html">Dashboard</a>
+    <a href="stocks.html">Stocks</a>
+    <a href="portfolio.html">Portfolio</a>
+    <a href="transactions.html">Transactions</a>
+</nav>
+
+<div class="container">
+
+    <h1>My Portfolio</h1>
+
+    <table>
+
+        <tr>
+            <th>Stock</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Action</th>
+        </tr>
+
+        <tr>
+            <td>TCS</td>
+            <td>5</td>
+            <td>₹3500</td>
+
+            <td>
+
+                <form action="trade" method="post">
+
+                    <input
+                        type="hidden"
+                        name="userId"
+                        value="1"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="stockId"
+                        value="1"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="type"
+                        value="SELL"
+                    >
+
+                    <input
+                        type="number"
+                        name="quantity"
+                        placeholder="Qty"
+                        required
+                    >
+
+                    <button>
+                        SELL
+                    </button>
+
+                </form>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+</div>
+
+</body>
+
+</html>
