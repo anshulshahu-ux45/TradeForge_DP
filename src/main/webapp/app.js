@@ -43,7 +43,7 @@ function initApp() {
 
 // Fetch session and backend data if available
 function fetchBackendData() {
-    fetch('/api/data', {
+    fetch('api/data', {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(res => res.ok ? res.json() : null)
@@ -304,7 +304,7 @@ function executeTradeSubmission(formData) {
     }, 900);
 
     // Perform actual AJAX fetch to TradeServlet
-    fetch('/trade', {
+    fetch('trade', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -386,7 +386,7 @@ function initLoginForm() {
         e.preventDefault();
         const formData = new FormData(loginForm);
 
-        fetch('/login', {
+        fetch('login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

@@ -12,23 +12,22 @@ public class DatabaseConnection {
 
     public static Connection getConnection() {
 
-        if (connection == null) {
+        try {
 
-            try {
+            if (connection == null || connection.isClosed()) {
 
-                Class.forName(
-                    "com.mysql.cj.jdbc.Driver"
-                );
+                Class.forName("com.mysql.cj.jdbc.Driver");
 
                 connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/tradeforge",
                     "root",
                     "anshul"
                 );
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
         }
 
         return connection;

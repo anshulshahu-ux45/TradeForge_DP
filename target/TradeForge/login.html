@@ -1,44 +1,57 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
-    <title>TradeForge</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeForge - Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div class="box">
+<div class="login-wrap">
+    <div class="login-box">
+        <div class="login-brand-icon">TF</div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px;">TRADEFORGE</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px;">Design Patterns Stock Trading Engine</p>
 
-    <h1>TRADEFORGE</h1>
+        <form id="loginForm" action="login" method="post">
+            <div class="form-group" style="text-align: left;">
+                <label class="form-label" for="username">Username</label>
+                <input 
+                    type="text" 
+                    id="username"
+                    name="username" 
+                    class="form-input" 
+                    placeholder="Enter username (e.g. admin)" 
+                    value="admin"
+                    required
+                >
+            </div>
 
-    <p>Stock Trading System</p>
+            <div class="form-group" style="text-align: left; margin-bottom: 24px;">
+                <label class="form-label" for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password"
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Enter password" 
+                    value="admin"
+                    required
+                >
+            </div>
 
-    <form action="login" method="post">
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1rem;">
+                LOG IN TO DASHBOARD &rarr;
+            </button>
+        </form>
 
-        <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            required
-        >
-
-        <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-        >
-
-        <button type="submit">
-            LOGIN
-        </button>
-
-    </form>
-
+        <div style="margin-top: 24px; font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span class="status-dot"></span> Backend Connection Active
+        </div>
+    </div>
 </div>
 
+<script src="app.js"></script>
 </body>
-
 </html>

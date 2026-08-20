@@ -1,166 +1,210 @@
 package com.tradeforge.servlet;
 
-import com.tradeforge.factory.*;
-import com.tradeforge.model.Trade;
-import com.tradeforge.proxy.*;
-import com.tradeforge.chain.*;
-import com.tradeforge.observer.*;
-import com.tradeforge.dao.TradeDAO;
-
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-
 import java.io.IOException;
 
+import com.tradeforge.chain.Agent1;
+import com.tradeforge.chain.Agent2;
+import com.tradeforge.chain.Agent3;
+import com.tradeforge.chain.AgentHandler;
+import com.tradeforge.dao.TradeDAO;
+import com.tradeforge.factory.Transaction;
+import com.tradeforge.factory.TransactionFactory;
+import com.tradeforge.model.Trade;
+import com.tradeforge.observer.TradeSubject;
+import com.tradeforge.observer.UserObserver;
+import com.tradeforge.proxy.TradingProxy;
+import com.tradeforge.proxy.TradingService;
+
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 @WebServlet("/trade")
-public class TradeServlet
-        extends HttpServlet {
+public class TradeServlet extends HttpServlet {
 
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        String accept = request.getHeader("Accept");
-        String requestedWith = request.getHeader("X-Requested-With");
-        boolean isAjax = (accept != null && accept.contains("application/json")) || "XMLHttpRequest".equals(requestedWith);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         try {
 
-            int userId =
-                Integer.parseInt(
-                    request.getParameter("userId")
+            HttpSession session =
+                    request.getSession(false);
+
+            if (session == null ||
+                    session.getAttribute("user") == null) {
+
+                response.setStatus(401);
+
+                response.getWriter().print(
+                        "{\"status\":\"error\"," +
+                        "\"message\":\"Please login first\"}"
                 );
 
-            int stockId =
-                Integer.parseInt(
-                    request.getParameter("stockId")
-                );
-
-            int quantity =
-                Integer.parseInt(
-                    request.getParameter("quantity")
-                );
-
-            String type =
-                request.getParameter("type");
-
-
-            // 1. FACTORY PATTERN
-
-            Transaction transaction =
-                TransactionFactory
-                .create(type);
-
-            if (transaction != null) {
-                transaction.execute();
+                return;
             }
 
+            int userId =
+                    Integer.parseInt(
+                            request.getParameter("userId")
+                    );
 
-            // 2. CHAIN OF RESPONSIBILITY PATTERN
+            int stockId =
+                    Integer.parseInt(
+                            request.getParameter("stockId")
+                    );
 
+            int quantity =
+                    Integer.parseInt(
+                            request.getParameter("quantity")
+                    );
+
+            String type =
+                    request.getParameter("type");
+
+            if (quantity <= 0) {
+                throw new Exception(
+                        "Quantity must be greater than 0"
+                );
+            }
+
+            // FACTORY
+            Transaction transaction =
+                    TransactionFactory.create(type);
+
+            if (transaction == null) {
+                throw new Exception(
+                        "Invalid transaction type"
+                );
+            }
+
+            transaction.execute();
+
+            // CHAIN OF RESPONSIBILITY
             AgentHandler agent1 =
-                new Agent1();
+                    new Agent1();
 
             AgentHandler agent2 =
-                new Agent2();
+                    new Agent2();
 
             AgentHandler agent3 =
-                new Agent3();
+                    new Agent3();
 
             agent1.setNext(agent2);
             agent2.setNext(agent3);
 
             int agentId =
-                agent1.handle(quantity);
+                    agent1.handle(quantity);
 
-
-            // 3. PROXY PATTERN
-
+            // TRADE OBJECT
             Trade trade =
-                new Trade(
-                    userId,
-                    stockId,
-                    type,
-                    quantity
-                );
+                    new Trade(
+                            userId,
+                            stockId,
+                            type,
+                            quantity
+                    );
 
+            // PROXY
             TradingService service =
-                new TradingProxy();
+                    new TradingProxy();
 
             String result =
-                service.trade(trade);
+                    service.trade(trade);
 
+            // STOCK PRICE
+            double price =
+                    getStockPrice(stockId);
 
-            // 4. DATABASE (SINGLETON PATTERN via TradeDAO)
+            double amount =
+                    price * quantity;
 
+            // DATABASE
             TradeDAO dao =
-                new TradeDAO();
+                    new TradeDAO();
 
-            try {
-                dao.saveTrade(
-                    trade,
-                    agentId,
-                    0
+            boolean saved =
+                    dao.saveTrade(
+                            trade,
+                            agentId,
+                            amount
+                    );
+
+            if (!saved) {
+                throw new Exception(
+                        "Transaction could not be saved"
                 );
-            } catch (Exception dbEx) {
-                // Log DB exception, continue trade processing execution
-                dbEx.printStackTrace();
             }
 
-
-            // 5. OBSERVER PATTERN
-
+            // OBSERVER
             TradeSubject subject =
-                new TradeSubject();
+                    new TradeSubject();
 
             subject.addObserver(
-                new UserObserver()
+                    new UserObserver()
             );
 
-            String notifyMsg = type +
-                " transaction completed. Agent " +
-                agentId +
-                " handled the order.";
+            subject.notifyUsers(
+                    type +
+                    " transaction completed. Agent " +
+                    agentId +
+                    " handled the order."
+            );
 
-            subject.notifyUsers(notifyMsg);
-
-
-            if (isAjax) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().print("{"
+            response.getWriter().print(
+                    "{"
                     + "\"status\":\"success\","
                     + "\"message\":\"" + result + "\","
                     + "\"agentId\":" + agentId + ","
-                    + "\"userId\":" + userId + ","
-                    + "\"stockId\":" + stockId + ","
-                    + "\"type\":\"" + type + "\","
-                    + "\"quantity\":" + quantity + ","
-                    + "\"notification\":\"" + notifyMsg + "\""
-                    + "}");
-            } else {
-                response.setContentType("text/html;charset=UTF-8");
-                response.getWriter().println(
-                    result +
-                    "<br>Agent " +
-                    agentId +
-                    " handled the order."
-                );
-            }
+                    + "\"amount\":" + amount
+                    + "}"
+            );
 
         } catch (Exception e) {
 
-            if (isAjax) {
-                response.setStatus(400);
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().print("{\"status\":\"error\",\"message\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Trade failed") + "\"}");
-            } else {
-                response.getWriter().println(
-                    "Error: " + e.getMessage()
-                );
-            }
+            e.printStackTrace();
+
+            response.setStatus(400);
+
+            response.getWriter().print(
+                    "{\"status\":\"error\"," +
+                    "\"message\":\"" +
+                    e.getMessage() +
+                    "\"}"
+            );
         }
     }
-}
+
+    private double getStockPrice(int stockId) {
+
+        switch (stockId) {
+
+            case 1:
+                return 3500.00;
+
+            case 2:
+                return 2850.50;
+
+            case 3:
+                return 1620.00;
+
+            case 4:
+                return 1540.75;
+
+            case 5:
+                return 1120.30;
+
+            case 6:
+                return 980.60;
+
+            default:
+                return 0;
+        }
+    }
+}

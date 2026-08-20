@@ -1,17 +1,18 @@
 package com.tradeforge.servlet;
 
+import java.io.IOException;
+
 import com.tradeforge.dao.UserDAO;
 import com.tradeforge.model.User;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-
-import java.io.IOException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/login")
-public class LoginServlet
-        extends HttpServlet {
+public class LoginServlet extends HttpServlet {
 
     protected void doPost(
             HttpServletRequest request,
@@ -24,57 +25,38 @@ public class LoginServlet
         String password =
             request.getParameter("password");
 
-        User user = null;
-        try {
-            UserDAO dao = new UserDAO();
-            user = dao.login(username, password);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        UserDAO dao = new UserDAO();
 
-        // Demo fallback for instant local execution
-        if (user == null && ("admin".equalsIgnoreCase(username) || username != null)) {
-            user = new User(1, username != null ? username : "Trader", 50000.00);
-        }
+        User user =
+            dao.login(username, password);
 
-        String accept = request.getHeader("Accept");
-        String requestedWith = request.getHeader("X-Requested-With");
-        boolean isAjax = (accept != null && accept.contains("application/json")) || "XMLHttpRequest".equals(requestedWith);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         if (user != null) {
 
             request.getSession()
                    .setAttribute("user", user);
 
-            if (isAjax) {
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().print("{"
-                    + "\"status\":\"success\","
-                    + "\"user\":{"
-                    + "\"id\":" + user.id + ","
-                    + "\"username\":\"" + user.username + "\","
-                    + "\"balance\":" + user.balance
-                    + "}"
-                    + "}");
-            } else {
-                response.sendRedirect(
-                    "dashboard.html"
-                );
-            }
+            response.getWriter().print(
+                "{"
+                + "\"status\":\"success\","
+                + "\"user\":{"
+                + "\"id\":" + user.id + ","
+                + "\"username\":\"" + user.username + "\","
+                + "\"balance\":" + user.balance
+                + "}"
+                + "}"
+            );
 
         } else {
 
-            if (isAjax) {
-                response.setStatus(401);
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().print("{\"status\":\"error\",\"message\":\"Invalid credentials\"}");
-            } else {
-                response.sendRedirect(
-                    "login.html?error=1"
-                );
-            }
+            response.setStatus(401);
+
+            response.getWriter().print(
+                "{\"status\":\"error\","
+                + "\"message\":\"Invalid username or password\"}"
+            );
         }
     }
 
@@ -83,16 +65,31 @@ public class LoginServlet
             HttpServletResponse response)
             throws IOException {
 
-        HttpSession session = request.getSession(false);
-        User user = (session != null) ? (User) session.getAttribute("user") : null;
+        HttpSession session =
+            request.getSession(false);
+
+        User user =
+            session != null
+            ? (User) session.getAttribute("user")
+            : null;
 
         response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
 
         if (user != null) {
-            response.getWriter().print("{\"loggedIn\":true,\"user\":{\"id\":" + user.id + ",\"username\":\"" + user.username + "\",\"balance\":" + user.balance + "}}");
+
+            response.getWriter().print(
+                "{\"loggedIn\":true,"
+                + "\"user\":{\"id\":" + user.id
+                + ",\"username\":\"" + user.username
+                + "\",\"balance\":" + user.balance
+                + "}}"
+            );
+
         } else {
-            response.getWriter().print("{\"loggedIn\":false}");
+
+            response.getWriter().print(
+                "{\"loggedIn\":false}"
+            );
         }
     }
-}
+}

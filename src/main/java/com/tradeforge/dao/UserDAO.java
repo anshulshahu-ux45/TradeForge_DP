@@ -1,32 +1,37 @@
 package com.tradeforge.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 import com.tradeforge.model.User;
 import com.tradeforge.singleton.DatabaseConnection;
 
-import java.sql.*;
-
 public class UserDAO {
 
-    public User login(
-            String username,
-            String password) {
+    public User login(String username, String password) {
+
+        String sql =
+            "SELECT id, username, balance " +
+            "FROM users " +
+            "WHERE username = ? AND password = ?";
 
         try {
 
             Connection con =
                 DatabaseConnection.getConnection();
 
+            if (con == null) {
+                return null;
+            }
+
             PreparedStatement ps =
-                con.prepareStatement(
-                    "SELECT * FROM users " +
-                    "WHERE username=? AND password=?"
-                );
+                con.prepareStatement(sql);
 
             ps.setString(1, username);
             ps.setString(2, password);
 
-            ResultSet rs =
-                ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
 
