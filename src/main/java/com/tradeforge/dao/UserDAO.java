@@ -49,4 +49,39 @@ public class UserDAO {
 
         return null;
     }
+
+    public User findById(int userId) {
+
+        String sql =
+            "SELECT id, username, balance " +
+            "FROM users WHERE id = ?";
+
+        try {
+
+            Connection con = DatabaseConnection.getConnection();
+
+            if (con == null) {
+                return null;
+            }
+
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setInt(1, userId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new User(
+                            rs.getInt("id"),
+                            rs.getString("username"),
+                            rs.getDouble("balance")
+                        );
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

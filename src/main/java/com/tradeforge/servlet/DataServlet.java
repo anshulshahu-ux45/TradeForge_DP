@@ -1,13 +1,17 @@
 package com.tradeforge.servlet;
 
+import java.io.IOException;
+
 import com.tradeforge.dao.StockDAO;
 import com.tradeforge.dao.TradeDAO;
+import com.tradeforge.dao.UserDAO;
 import com.tradeforge.model.User;
 
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-
-import java.io.IOException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/api/data")
 public class DataServlet extends HttpServlet {
@@ -40,6 +44,19 @@ public class DataServlet extends HttpServlet {
             return;
         }
 
+        User freshUser =
+                new UserDAO().findById(user.id);
+
+        if (freshUser == null) {
+            response.setStatus(401);
+            response.getWriter().print(
+                    "{\"status\":\"error\",\"message\":\"User account not found\"}"
+            );
+            return;
+        }
+
+        session.setAttribute("user", freshUser);
+
         StockDAO stockDAO = new StockDAO();
 
         TradeDAO tradeDAO = new TradeDAO();
@@ -48,20 +65,22 @@ public class DataServlet extends HttpServlet {
                 stockDAO.getStocksJSON();
 
         String transactions =
-                tradeDAO.getTransactionsJSON(user.id);
+                tradeDAO.getTransactionsJSON(freshUser.id);
 
         String json =
                 "{"
                 + "\"user\":{"
-                + "\"id\":" + user.id + ","
-                + "\"username\":\"" + user.username + "\","
-                + "\"balance\":" + user.balance
+                + "\"id\":" + freshUser.id + ","
+                + "\"username\":\"" + freshUser.username + "\","
+                + "\"balance\":" + freshUser.balance
                 + "},"
 
                 + "\"stocks\":" + stocks + ","
 
-                + "\"transactions\":" + transactions
+                + "\"transactions\":" + transactions + ","
 
+                + "\"portfolio\":" +
+                tradeDAO.getPortfolioJSON(freshUser.id)
                 + "}";
 
         response.getWriter().print(json);

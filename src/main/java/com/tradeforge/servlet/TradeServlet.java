@@ -10,6 +10,8 @@ import com.tradeforge.dao.TradeDAO;
 import com.tradeforge.factory.Transaction;
 import com.tradeforge.factory.TransactionFactory;
 import com.tradeforge.model.Trade;
+import com.tradeforge.model.TradeResult;
+import com.tradeforge.model.User;
 import com.tradeforge.observer.TradeSubject;
 import com.tradeforge.observer.UserObserver;
 import com.tradeforge.proxy.TradingProxy;
@@ -50,10 +52,10 @@ public class TradeServlet extends HttpServlet {
                 return;
             }
 
-            int userId =
-                    Integer.parseInt(
-                            request.getParameter("userId")
-                    );
+            User sessionUser =
+                    (User) session.getAttribute("user");
+
+            int userId = sessionUser.id;
 
             int stockId =
                     Integer.parseInt(
@@ -67,6 +69,10 @@ public class TradeServlet extends HttpServlet {
 
             String type =
                     request.getParameter("type");
+
+                        if (type == null || type.trim().isEmpty()) {
+                                throw new Exception("Transaction type is required");
+                        }
 
             if (quantity <= 0) {
                 throw new Exception(
@@ -115,32 +121,15 @@ public class TradeServlet extends HttpServlet {
             TradingService service =
                     new TradingProxy();
 
-            String result =
-                    service.trade(trade);
-
-            // STOCK PRICE
-            double price =
-                    getStockPrice(stockId);
-
-            double amount =
-                    price * quantity;
-
             // DATABASE
             TradeDAO dao =
                     new TradeDAO();
 
-            boolean saved =
-                    dao.saveTrade(
-                            trade,
-                            agentId,
-                            amount
-                    );
+            String result = service.trade(trade);
+            TradeResult tradeResult =
+                    dao.executeTrade(trade, agentId);
 
-            if (!saved) {
-                throw new Exception(
-                        "Transaction could not be saved"
-                );
-            }
+            sessionUser.balance = tradeResult.balance;
 
             // OBSERVER
             TradeSubject subject =
@@ -162,7 +151,8 @@ public class TradeServlet extends HttpServlet {
                     + "\"status\":\"success\","
                     + "\"message\":\"" + result + "\","
                     + "\"agentId\":" + agentId + ","
-                    + "\"amount\":" + amount
+                    + "\"amount\":" + tradeResult.amount + ","
+                    + "\"balance\":" + tradeResult.balance
                     + "}"
             );
 
@@ -181,30 +171,4 @@ public class TradeServlet extends HttpServlet {
         }
     }
 
-    private double getStockPrice(int stockId) {
-
-        switch (stockId) {
-
-            case 1:
-                return 3500.00;
-
-            case 2:
-                return 2850.50;
-
-            case 3:
-                return 1620.00;
-
-            case 4:
-                return 1540.75;
-
-            case 5:
-                return 1120.30;
-
-            case 6:
-                return 980.60;
-
-            default:
-                return 0;
-        }
-    }
 }

@@ -1,3 +1,4 @@
+com\tradeforge\model\TradeResult.class
 com\tradeforge\observer\UserObserver.class
 com\tradeforge\chain\AgentHandler.class
 com\tradeforge\servlet\DataServlet.class
@@ -8,6 +9,7 @@ com\tradeforge\factory\TransactionFactory.class
 com\tradeforge\AppServer.class
 com\tradeforge\chain\Agent1.class
 com\tradeforge\AppServer$TradeHandler.class
+com\tradeforge\ConsoleApp.class
 com\tradeforge\dao\StockDAO.class
 com\tradeforge\factory\BuyTransaction.class
 com\tradeforge\dao\UserDAO.class

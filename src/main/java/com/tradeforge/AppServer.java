@@ -1,17 +1,9 @@
 package com.tradeforge;
 
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpExchange;
-
-import com.tradeforge.factory.*;
-import com.tradeforge.model.Trade;
-import com.tradeforge.proxy.*;
-import com.tradeforge.chain.*;
-import com.tradeforge.observer.*;
-import com.tradeforge.dao.TradeDAO;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +12,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import com.tradeforge.chain.Agent1;
+import com.tradeforge.chain.Agent2;
+import com.tradeforge.chain.Agent3;
+import com.tradeforge.chain.AgentHandler;
+import com.tradeforge.dao.StockDAO;
+import com.tradeforge.dao.TradeDAO;
+import com.tradeforge.dao.UserDAO;
+import com.tradeforge.factory.Transaction;
+import com.tradeforge.factory.TransactionFactory;
+import com.tradeforge.model.Trade;
+import com.tradeforge.observer.TradeSubject;
+import com.tradeforge.observer.UserObserver;
+import com.tradeforge.proxy.TradingProxy;
+import com.tradeforge.proxy.TradingService;
 
 /**
  * Embedded TradeForge Server Launcher.
@@ -95,9 +105,20 @@ public class AppServer {
                 // 4. SINGLETON / DATABASE PATTERN
                 try {
                     TradeDAO dao = new TradeDAO();
-                    dao.saveTrade(trade, agentId, 0);
+                    dao.executeTrade(trade, agentId);
                 } catch (Exception e) {
-                    // DB Connection exception fallback
+                    if (isAjax) {
+                        String error = "{\"status\":\"error\",\"message\":\""
+                                + e.getMessage() + "\"}";
+                        exchange.getResponseHeaders().set(
+                                "Content-Type", "application/json; charset=UTF-8");
+                        byte[] bytes = error.getBytes(StandardCharsets.UTF_8);
+                        exchange.sendResponseHeaders(400, bytes.length);
+                        try (OutputStream os = exchange.getResponseBody()) {
+                            os.write(bytes);
+                        }
+                        return;
+                    }
                 }
 
                 // 5. OBSERVER PATTERN
@@ -164,23 +185,47 @@ public class AppServer {
     static class DataHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            String json = "{"
-                + "\"user\":{\"id\":1,\"username\":\"Trader\",\"balance\":50000.00},"
-                + "\"stocks\":["
-                + "{\"id\":1,\"symbol\":\"TCS\",\"name\":\"Tata Consultancy Services\",\"price\":3500.00,\"change\":1.25,\"quantity\":5000,\"category\":\"Tech\"},"
-                + "{\"id\":2,\"symbol\":\"RELIANCE\",\"name\":\"Reliance Industries\",\"price\":2850.50,\"change\":-0.45,\"quantity\":4200,\"category\":\"Energy\"},"
-                + "{\"id\":3,\"symbol\":\"INFY\",\"name\":\"Infosys Limited\",\"price\":1620.00,\"change\":2.10,\"quantity\":6100,\"category\":\"Tech\"},"
-                + "{\"id\":4,\"symbol\":\"HDFCBANK\",\"name\":\"HDFC Bank Ltd.\",\"price\":1540.75,\"change\":0.80,\"quantity\":8000,\"category\":\"Banking\"},"
-                + "{\"id\":5,\"symbol\":\"ICICIBANK\",\"name\":\"ICICI Bank Ltd.\",\"price\":1120.30,\"change\":-1.15,\"quantity\":3500,\"category\":\"Banking\"},"
-                + "{\"id\":6,\"symbol\":\"TATAMOTORS\",\"name\":\"Tata Motors Ltd.\",\"price\":980.60,\"change\":3.40,\"quantity\":9500,\"category\":\"Auto\"}"
-                + "]"
-                + "}";
-            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-            byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, bytes.length);
-            OutputStream os = exchange.getResponseBody();
+            try {
+                int userId = 1;
+                com.tradeforge.model.User user = new UserDAO().findById(userId);
+
+                if (user == null) {
+                    sendJson(exchange, 401,
+                            "{\"status\":\"error\",\"message\":\"User account not found\"}");
+                    return;
+                }
+
+                StockDAO stockDAO = new StockDAO();
+                TradeDAO tradeDAO = new TradeDAO();
+                String json = "{"
+                    + "\"user\":{"
+                    + "\"id\":" + user.id + ","
+                    + "\"username\":\"" + user.username + "\","
+                    + "\"balance\":" + user.balance
+                    + "},"
+                    + "\"stocks\":" + stockDAO.getStocksJSON() + ","
+                    + "\"transactions\":" + tradeDAO.getTransactionsJSON(user.id) + ","
+                    + "\"portfolio\":" + tradeDAO.getPortfolioJSON(user.id)
+                    + "}";
+
+                sendJson(exchange, 200, json);
+            } catch (Exception e) {
+                sendJson(exchange, 500,
+                        "{\"status\":\"error\",\"message\":\"Database unavailable\"}");
+            }
+        }
+    }
+
+    private static void sendJson(
+            HttpExchange exchange,
+            int status,
+            String json) throws IOException {
+        exchange.getResponseHeaders().set(
+                "Content-Type", "application/json; charset=UTF-8");
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(status, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);
-            os.close();
         }
     }
 

@@ -5,3 +5,14 @@ Design Patterns Used:
 🔗 Chain of Responsibility – Agent-level request handling
 📦 Singleton – Centralized stock market management
 🔔 Observer – Stock price change notifications
+
+Console Experience
+------------------
+Build the project with Maven, then launch the terminal client from PowerShell:
+
+	mvn clean package -DskipTests
+	java -cp "target/classes;$env:USERPROFILE\.m2\repository\com\mysql\mysql-connector-j\9.4.0\mysql-connector-j-9.4.0.jar" com.tradeforge.ConsoleApp
+
+The console client supports database login, stock viewing, BUY and SELL orders,
+portfolio viewing, transaction history, and balance refresh. It uses the same
+atomic database trade workflow as the web application.

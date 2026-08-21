@@ -14,7 +14,7 @@ public class StockDAO {
             new StringBuilder("[");
 
         String sql =
-            "SELECT * FROM stocks";
+            "SELECT id, symbol, price, quantity FROM stocks";
 
         try {
 
@@ -45,7 +45,7 @@ public class StockDAO {
                     .append("\",")
 
                     .append("\"name\":\"")
-                    .append(rs.getString("name"))
+                    .append(rs.getString("symbol"))
                     .append("\",")
 
                     .append("\"price\":")

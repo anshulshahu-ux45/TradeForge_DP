@@ -46,19 +46,80 @@ function fetchBackendData() {
     fetch('api/data', {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(res => res.ok ? res.json() : null)
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Could not refresh data from the server');
+        }
+        return res.json();
+    })
     .then(data => {
         if (data) {
             if (data.user) AppState.user = data.user;
             if (data.stocks) AppState.stocks = data.stocks;
             if (data.portfolio) AppState.portfolio = data.portfolio;
+            if (data.transactions) AppState.transactions = data.transactions;
+            renderTicker();
+            renderStocks();
+            renderPortfolio();
+            refreshTables();
             updateUserUI();
         }
     })
-    .catch(() => {
-        // Local state active
+    .catch(error => {
         updateUserUI();
+        showToast(error.message || 'Could not refresh data', 'error');
     });
+}
+
+function renderStocks() {
+    const table = document.getElementById('stocksTableBody');
+    if (!table) return;
+
+    table.innerHTML = AppState.stocks.map(stock => `
+        <tr>
+            <td><strong>${stock.symbol}</strong></td>
+            <td>${stock.name}</td>
+            <td>${stock.category || 'Market'}</td>
+            <td class="font-mono">₹${Number(stock.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td class="kpi-change ${(stock.change || 0) >= 0 ? 'positive' : 'negative'}">${Number(stock.change || 0).toFixed(2)}%</td>
+            <td class="font-mono">${Number(stock.quantity || 0).toLocaleString('en-IN')}</td>
+            <td>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-buy" data-trade-stock="${stock.id}" data-trade-type="BUY">BUY</button>
+                    <button class="btn btn-sell" data-trade-stock="${stock.id}" data-trade-type="SELL">SELL</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderPortfolio() {
+    const table = document.getElementById('portfolioTableBody');
+    if (!table) return;
+
+    table.innerHTML = AppState.portfolio.map(holding => {
+        const currentValue = Number(holding.currentValue || holding.currentPrice * holding.quantity);
+        const invested = Number(holding.avgPrice) * Number(holding.quantity);
+        const profit = currentValue - invested;
+        const profitClass = profit >= 0 ? 'positive' : 'negative';
+
+        return `
+            <tr>
+                <td><strong>${holding.symbol}</strong></td>
+                <td class="font-mono">${holding.quantity}</td>
+                <td class="font-mono">₹${Number(holding.avgPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="font-mono">₹${Number(holding.currentPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td class="font-mono">₹${currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td><span class="kpi-change ${profitClass}">${profit >= 0 ? '▲' : '▼'} ₹${Math.abs(profit).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></td>
+                <td>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-buy" data-trade-stock="${holding.stockId}" data-trade-type="BUY">BUY MORE</button>
+                        <button class="btn btn-sell" data-trade-stock="${holding.stockId}" data-trade-type="SELL">SELL</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function updateUserUI() {
@@ -315,6 +376,10 @@ function executeTradeSubmission(formData) {
     })
     .then(res => res.json().catch(() => null))
     .then(data => {
+        if (!data || data.status !== 'success') {
+            throw new Error(data && data.message ? data.message : 'Trade could not be completed');
+        }
+
         const finalAgent = data && data.agentId ? data.agentId : agentId;
         const msg = data && data.message ? data.message : 'Trade executed successfully';
 
@@ -324,26 +389,11 @@ function executeTradeSubmission(formData) {
 
         setTimeout(() => {
             showToast(`📢 Observer Pattern: ${msg} (Agent ${finalAgent})`, 'success');
-
-            // Update client state locally
-            AppState.transactions.unshift({
-                type: type,
-                symbol: stock.symbol,
-                quantity: qty,
-                agentId: finalAgent,
-                amount: stock.price * qty,
-                date: new Date().toISOString().replace('T', ' ').substring(0, 16)
-            });
-
-            refreshTables();
+            fetchBackendData();
         }, 1700);
     })
-    .catch(() => {
-        // Fallback execution if server is offline
-        setTimeout(() => {
-            showToast(`📢 Observer Pattern: Trade executed! Agent ${agentId} handled order.`, 'success');
-            refreshTables();
-        }, 1500);
+    .catch(error => {
+        showToast(error.message || 'Trade could not be completed', 'error');
     });
 }
 
